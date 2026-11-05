@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0E2A32" />
+<title>CancerPredict — Preemptive Cancer Risk Screening</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ============ shared chrome ============ -->
+<div class="progress-rail" id="progressRail"><span></span></div>
+
+<header class="nav">
+  <a class="mark" href="#" onclick="go('landing')">
+    <svg class="mark__glyph" viewBox="0 0 40 40" aria-hidden="true">
+      <path d="M4 22h7l3.5-8 5.5 17 4.5-12 3.5 4h8" />
+    </svg>
+    <span class="mark__word">Cancer<em>Predict</em></span>
+  </a>
+  <nav class="nav__links">
+    <a href="#method" onclick="jumpTo('method'); return false;">Method</a>
+    <a href="#results" onclick="jumpTo('results'); return false;">Results</a>
+  </nav>
+  <button class="nav__cta" onclick="go('assessment')">Start</button>
+</header>
+
+<!-- ============ 1. LANDING ============ -->
+<main id="landing" class="screen screen--on">
+  <section class="hero">
+    <div class="hero__copy">
+      <p class="tag">Preemptive screening · Machine learning</p>
+      <h1>Find out<br />what's <span>coming</span>.</h1>
+      <p class="hero__sub">
+        Two clinical models turn a short questionnaire and a routine blood panel into an
+        estimate of breast and prostate cancer risk — before anything shows up on a scan.
+      </p>
+      <div class="hero__act">
+        <button class="btn btn--fill" onclick="go('assessment')">
+          Begin assessment <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </button>
+        <span class="hero__meta">~2 minutes · no account</span>
+      </div>
+    </div>
+
+    <div class="hero__art" aria-hidden="true">
+      <div class="pulse">
+        <svg viewBox="0 0 320 320">
+          <circle class="pulse__ring" cx="160" cy="160" r="128"/>
+          <circle class="pulse__ring pulse__ring--2" cx="160" cy="160" r="96"/>
+          <path class="pulse__line" d="M20 160 h70 l18-42 26 84 22-58 16 26 h128"/>
+          <circle class="pulse__dot" cx="268" cy="160" r="7"/>
+        </svg>
+      </div>
+      <div class="hero__stat">
+        <b>0.99</b>
+        <span>breast model sensitivity</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- choose an assessment — rendered from data, no duplicated markup -->
+  <section class="picker" id="picker">
+    <h2 class="h2">Choose your screening</h2>
+    <div class="picker__row" id="pickerRow"></div>
+  </section>
+
+  <!-- method -->
+  <section class="method" id="method">
+    <h2 class="h2">How it works</h2>
+    <ol class="flow">
+      <li>
+        <span class="flow__n">01</span>
+        <h3>Answer</h3>
+        <p>Plain questions about your health, lifestyle and family history.</p>
+      </li>
+      <li>
+        <span class="flow__n">02</span>
+        <h3>Analyse</h3>
+        <p>Answers are encoded and passed through a cross-validated ensemble of clinical data.</p>
+      </li>
+      <li>
+        <span class="flow__n">03</span>
+        <h3>Act</h3>
+        <p>You get a risk percentage, a clear verdict, and guidance on what to do next.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- results -->
+  <section class="results" id="results">
+    <h2 class="h2">Measured performance</h2>
+    <div class="results__grid" id="resultsGrid"></div>
+    <p class="results__note">
+      Recall is the headline metric: for screening, a false alarm costs a test, while a
+      false negative costs a life. Thresholds were tuned for that trade-off.
+    </p>
+  </section>
+</main>
+
+<!-- ============ 2. ASSESSMENT ============ -->
+<main id="assessment" class="screen">
+  <div class="sheet">
+    <div class="sheet__head">
+      <div class="seg" id="seg" role="tablist" aria-label="Assessment type"></div>
+      <h1 class="sheet__title" id="sheetTitle"></h1>
+      <p class="sheet__sub" id="sheetSub"></p>
+    </div>
+
+    <form id="form" class="sheet__body" novalidate>
+      <div id="fields"></div>
+      <div class="sheet__foot">
+        <button class="btn btn--fill btn--wide" type="submit">
+          Calculate my risk <svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="fine">Educational screening support only — not a medical diagnosis.</p>
+      </div>
+    </form>
+  </div>
+</main>
+
+<!-- ============ 3. RESULT ============ -->
+<main id="result" class="screen">
+  <div class="outcome">
+    <div class="outcome__gauge">
+      <svg viewBox="0 0 200 200" class="gauge">
+        <circle class="gauge__track" cx="100" cy="100" r="86"/>
+        <circle class="gauge__value" id="gaugeValue" cx="100" cy="100" r="86"/>
+      </svg>
+      <div class="outcome__figure">
+        <b id="riskNumber">0</b><i>%</i>
+        <span>estimated risk</span>
+      </div>
+    </div>
+
+    <div class="outcome__body">
+      <p class="tag" id="rType"></p>
+      <h1 class="outcome__verdict" id="rVerdict">—</h1>
+      <p class="outcome__msg" id="rMessage">—</p>
+
+      <dl class="facts">
+        <div><dt>Decision threshold</dt><dd id="rThreshold">—</dd></div>
+        <div><dt>Model</dt><dd id="rModel">—</dd></div>
+        <div class="facts__wide"><dt>Features that drive this score</dt><dd id="rFeatures">—</dd></div>
+      </dl>
+
+      <div class="outcome__act">
+        <button class="btn btn--fill" onclick="go('assessment')">Retake</button>
+        <button class="btn btn--ghost" onclick="go('landing')">Back to home</button>
+      </div>
+
+      <p class="callout">
+        <svg viewBox="0 0 24 24" class="callout__ico"><path d="M12 9v5M12 17.5v.5M10.3 3.9 2.6 17.4A2 2 0 0 0 4.3 20.4h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <span>This is a statistical estimate for screening support, <b>not a diagnosis</b>. Discuss your result with a qualified healthcare professional.</span>
+      </p>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <p>Final-year project · Preemptive cancer prediction using questionnaire-based machine learning</p>
+  <p class="foot__dim">Built with scikit-learn, imbalanced-learn and FastAPI</p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
